@@ -6,7 +6,7 @@
 % Parse %
 %%%%%%%%%
 parse(String) ->
-    lists:map(fun get_song/1, split_by_songs(String)).
+    {sheet, lists:map(fun get_song/1, split_by_songs(String))}.
 
 get_song(String) ->
     Title = get_song_title(String),
@@ -85,14 +85,37 @@ find_directive_value(String, Name) ->
 %%%%%%%%%%%%%
 % formating %
 %%%%%%%%%%%%%
-
-format({song, Content}) ->
-    "<div class='song'>" ++ Content ++ "</div>";
+format({sheet, Content}) ->
+    lists:concat([
+    "<html>
+    <head>
+    <meta charset='UTF-8'>
+    </head>
+    <body>",
+    format(Content),
+    "</body>
+    </html>"
+    ]);
+format({song, [Title|Content]}) ->
+    lists:concat([
+        "<div class='song'>
+        <h1>",
+        Title,
+        "</h1>",
+        format(Content),
+        "</div>"
+    ]);
+format({empty, _}) ->
+    "<br/>";
+format({Type, Content}) ->
+    lists:concat(["<div class='", Type, "'>", format(Content), "</div>"]);
 format([]) ->
     "";
 format([H|T]) ->
-    format(H) ++ format(T);
-format(_) ->
+    [format(H) | format(T)];
+format(Else) ->
+    Else.
+format() ->
     "".
     
 
@@ -112,6 +135,7 @@ skip_last(List) ->
 %% Read File functions
 test() ->
     {ok, File} = file:read_file("test.chord"),
-    io:format("~p", [parse(File)]).
-    %res = file:write_file("~/format.html", io_lib:fwrite("~p", [format(parse(File)))),
-    %io:format("~p", [res]).
+    io:format("~ts", [format(parse(File))]).
+    %io:format("~p", [parse(File)]).
+    %res = file:write_file("~/format.html", iolist_to_binary(format(parse(File)))),
+    %io:format("~ts", [res]).
