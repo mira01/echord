@@ -17,7 +17,7 @@ split_by_empty_line_test() ->
     ?assertEqual(["text ", "dalsi"], zpevnik:split_by_empty_lines("text \r\n\r\ndalsi")).
 
 split_by_new_lines_test() ->
-    ?assertEqual(["text", "dalsi"], zpevnik:split_by_new_lines("text\ndalsi")).
+    ?assertEqual(["text\n", "dalsi", []], zpevnik:split_by_new_lines("text\ndalsi")).
 
 line_is_type_empty_test() ->
     ?assertEqual(empty, zpevnik:is_line_type_empty("  ")),
@@ -30,3 +30,14 @@ line_type_test() ->
     ?assertEqual(empty, zpevnik:line_type("  ")),
     ?assertEqual(directive, zpevnik:line_type("{  t  :  nazev  }")),
     ?assertEqual(normal, zpevnik:line_type(" text ")).
+
+parse_chords_test() ->
+    ?assertEqual( [ 
+        {chord, "G"}, "Mile a ",
+        {chord, "C"}, "mile jsou ",
+        {chord, "G"}, "cest, ktere ", 
+        {chord, "Em"}, "znam" 
+        ], zpevnik:parse_line("[G]Mile a [C]mile jsou [G]cest, ktere [Em]znam")).
+
+parse_multiple_chords_test() ->
+    ?assertEqual([{chord, "C"},{chord, "F"},{chord, "B"}, "vyhravka",{chord, "C"}], zpevnik:parse_line("[C,F, B ,C]vyhravka")).

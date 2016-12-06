@@ -56,7 +56,6 @@ split_by_new_lines(String) ->
     {match, Matches} = re:run(String, ".*?\n|.*$", [global]),
     strings_by_matches(String, Matches).
 
-
 split_by_empty_lines(String) ->
     split_by(String, "\r\n\r\n(\r\n)*").
 
@@ -67,13 +66,24 @@ split_by(String, Pattern) ->
             end,
             re:split(String, Pattern, [{return, list}])
             ).
+parse_line(String) ->
+    Parts = split_by(String, "(\\[.*?\\])"),
+    lists:map(fun make_chord/1, Parts).
+
+make_chord(String) ->
+    case (re:run(String, "\\[(.+?)\\]")) of
+        {match, [_Whole, Chord]} -> {chord, string_by_match(String, Chord)};
+        nomatch -> String
+    end.
 
 strings_by_matches(String, List) ->
     strings_by_matches(String, List, []).
 strings_by_matches(_String, [], Acc) ->
     lists:reverse(Acc);
 strings_by_matches(String, [[{Start, Len}]|T], Acc) ->
-    strings_by_matches(String, T, [string:substr(String, Start + 1, Len) | Acc]).
+    strings_by_matches(String, T, [string_by_match(String, {Start, Len}) | Acc]).
+string_by_match(String, {Start, Len}) ->
+    string:substr(String, Start + 1, Len).
 
 find_directive_value(String, Name) ->
     case  ( re:run(String, "{\s*" ++ Name ++ "\s*:\s*(.*?)\s*}") ) of 
@@ -136,6 +146,8 @@ skip_last(List) ->
 test() ->
     {ok, File} = file:read_file("test.chord"),
     io:format("~ts", [format(parse(File))]).
-    %io:format("~p", [parse(File)]).
+test_format() ->
+    {ok, File} = file:read_file("test.chord"),
+    io:format("~p", [parse(File)]).
     %res = file:write_file("~/format.html", iolist_to_binary(format(parse(File)))),
     %io:format("~ts", [res]).
